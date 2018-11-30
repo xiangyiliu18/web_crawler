@@ -1,24 +1,24 @@
 import scrapy
 
-## scrapy the website: http://quotes.toscrape.com/login
 class QuotesSpider(scrapy.Spider):
+    name = "quotes"
     ''' Identifies the Spider.  It must be unique with a project. '''
 
-    name = "quotes" 
-    ## 'strat_requests'--> return an iterable of Requests which the Spider will begin to crawl from
     def start_requests(self):
-        urls = [
-            'http://quotes.toscrape.com/', ## the starting html page
-        ]
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
-
-    def parse(self, response):  ## to handle the response dowloaded for each of the request made.
+        url = 'http://quotes.toscrape.com/'
+        tag = getattr(self, 'tag', None)
+        if tag is not None:
+            url = url + 'tag/' + tag
+        yield scrapy.Request(url, self.parse)
         ## 'response' -- an instance of 'TextResponses'
         ## parse() --- extract the scraped data as dicts and also finding new URLs to follow and creating new requests(Request)
-        print(response)
-        page = response.url.split("/")[-2]
-        filename = 'quotes-%s.html' % page
-        with open(filename, 'wb') as f:
-            f.write(response.body)
-        self.log('Saved file %s' % filename)
+    def parse(self, response):
+        for quote in response.css('div.quote'):
+            yield {
+                'text': quote.css('span.text::text').extract_first(),
+                'author': quote.css('small.author::text').extract_first(),
+            }
+
+        next_page = response.css('li.next a::attr(href)').extract_first()
+        if next_page is not None:
+            yield response.follow(next_page, self.parse)
