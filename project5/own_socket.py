@@ -1,6 +1,7 @@
 import socket
 import sys
 import argparse
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 # count_page = -1
@@ -20,7 +21,9 @@ class OwnSocket:
     '''
     def connect(self, url):
         global count_page
-        _, _, host, path = url.split('/',3)
+        url = urlparse(url)
+        host = url.hostname
+        path = url.path
         addr = socket.getaddrinfo(host, 80)[0][-1]
         self.sock.connect(addr)
         sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
@@ -40,10 +43,10 @@ class OwnSocket:
         return total_data
 
 
-    def get_response(self,url, filename):  ## one page response
+    def get_response(self, url, filename):  ## one page response
         response = self.connect(url)
         response = b''.join(response)
-        all_content = response.decode()
+        all_content = response.decode("utf8", "ignore")
 
         header = all_content.split('\r\n\r\n')[0]
         with open("header.txt", "w") as f:
@@ -89,10 +92,8 @@ def create_dict(words_file):
 
 
 def main():
-    crawler = Crawler()
     sock=OwnSocket()
     sock.get_response("http://songyy.pythonanywhere.com/quotes", "home.html")
-    sock.get_response("http://songyy.pythonanywhere.com/quotes", "home1.html")
     crawler = Crawler()
     own_config = dict()
     own_config['user_agent']= sys.args.user  # one user_agent
