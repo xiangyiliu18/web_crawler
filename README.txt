@@ -9,3 +9,8 @@ Start your first spider with:
 
 
 2. scrapy crawl quotes -o quotes-humor.json -a tag=humor
+
+3.  Scrapy is not Apache Nutch, that is, it's not generic web crawler.  If Scrapy visits a website it knows
+	nothing about.  It won't be able to make anything meaningful out of it.  S
+
+	Scrapy is about extrracting, structurd information, and requires 
