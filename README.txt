@@ -6,3 +6,7 @@ Cheryl
 2. Info
 "http://songyy.pythonanywhere.com/quotes"
 
+
+3. Limit:
+  3.1 must use sockets to create http's Get and Post
+  3.2 can use urllib.parse to cnvert relative urls to their absolute conterpart
