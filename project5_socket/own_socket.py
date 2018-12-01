@@ -79,7 +79,7 @@ class Crawler:
         parser.print_help()
 
 
-def create_base_dict(words_file):
+def create_dict(words_file):
     with open(words_file, 'r') as f:
         words_list=[]
         for line in f:
@@ -88,11 +88,11 @@ def create_base_dict(words_file):
         return words_list
 
 
-
 def main():
     crawler = Crawler()
     sock=OwnSocket()
     sock.get_response("http://songyy.pythonanywhere.com/quotes", "home.html")
+    sock.get_response("http://songyy.pythonanywhere.com/quotes", "home1.html")
     crawler = Crawler()
     own_config = {}
     own_config['user_agent']= sys.args.user  # one user_agent
