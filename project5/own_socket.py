@@ -94,14 +94,11 @@ def main():
     sock.get_response("http://songyy.pythonanywhere.com/quotes", "home.html")
     sock.get_response("http://songyy.pythonanywhere.com/quotes", "home1.html")
     crawler = Crawler()
-    own_config = {}
+    own_config = dict()
     own_config['user_agent']= sys.args.user  # one user_agent
-    own_config['choice'] = sys.args.choice  # breadth or depth
-    own_config['depth']= sys.args.depth  #  depth of pages to crawling
-    own_config['page'] = sys.args.page  # number of pages to crawled pages
-
-
-
+    own_config['choice'] = sys.args.choice   # breadth or depth
+    own_config['depth']= sys.args.depth      # depth of pages to crawling
+    own_config['page'] = sys.args.page       # number of pages to crawled pages
 
 
 main()
