@@ -9,4 +9,5 @@ Start your first spider with:
 
 
 2. scrapy crawl quotes -o quotes-humor.json -a tag=humor
-<a href="http://songyy.pythonanywhere.com/quotes">quotes
+
+<a href="http://songyy.pythonanywhere.com/quotes">Quotes</a>
