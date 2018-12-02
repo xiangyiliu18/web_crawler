@@ -6,8 +6,11 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from urllib.parse import urljoin
 
+error_codes=['400 BAD REQUEST', '401 UNAUTHORIZED', '403 FORBIDDEN','404 NOT FOUND','410 GONE','500 INTERNAL SERVER ERROR','501 NOT IMPLEMENTED','503 SERVICE UNAVAILABLE','550 PERMISSION DENIED']
 
-links_depth={}
+links_depth={} #For BFS
+
+starting_page="http://songyy.pythonanywhere.com/quotes"
 
 user_agent = None
 '''
@@ -178,7 +181,17 @@ def find_links(soup,links_depth,depth):
     allLinks = soup.findAll('a',href=True)
     temp_list = []
     for n in allLinks:
-        temp_list.append(urljoin("http://songyy.pythonanywhere.com/quotes",n['href']))
+        thehttp=urljoin(starting_page,n['href'])
+        
+        #check if the link is already in the dict
+        found=0
+        for n in range(len(links_depth)):
+            if thehttp in links_depth[n]:
+                found=1
+        if thehttp in temp_list:
+            found=1
+        if found==0:        
+            temp_list.append(thehttp)
 
     if depth in links_depth:
         links_depth[depth].extend(temp_list)
@@ -192,17 +205,13 @@ def output_files(words,links_depth,login):
     w = open("words.txt", "wb")
     w.write(new_words)
 
-    #global links_depth
     l = open("links.txt", "wb")
-    for n in links_depth:
+    for n in range(len(links_depth)):
         new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
         l.write(new_links)
 
     w.close()
     l.close()
-
-
-
 
 # reverse a word file
 reversed_words_file = open("reversed_words.txt", "w")
@@ -248,17 +257,29 @@ def main():
     own_config['choice'] = sys.args.choice  # breadth or depth
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
+    user_agent = own_config['user_agent']
+    crawler.http_get(starting_page, 'home.html')
 
-    #3 lists
+    #check deadend of the very first page
+    header = open("header.txt", encoding='utf8')
+    firstline=header.readline().rstrip()
+    for codes in error_codes: 
+        error_message="HTTP/1.1 "+codes
+        if firstline==error_message:
+            print("Cannot open this page!")
+            exit(1)
+            
+
+    #2 lists
     words=[]
     login=[]
 
     web = open("home.html", encoding='utf8')
     soup = BeautifulSoup(web, "html.parser")
-    links_depth[0]= ["http://songyy.pythonanywhere.com/quotes"]
+    links_depth[0]= [starting_page]
 
     find_words(soup,words)
-    find_links(soup,links_depth,1)   
+    find_links(soup,links_depth,1) 
 
     # depth=1 || page=1
     if own_config['depth']==1 or own_config['page']==1:
@@ -267,38 +288,45 @@ def main():
 
     #Depth First Search
     if own_config['choice'] == 'depth':
+        print("HI")
+        
+    #hardcoding it first may change this value later
+    if(own_config['depth']==0):
+        own_config['depth']=1000
 
-    #Breadth First Search
+    # Breadth First Search
     else:
-       page_opened=1
-       current_depth=1 
-       for cd in range(1,own_config['depth']-1):
-            for each_link in links_depth[cd]:
-                page_opened+=1
-                
+        page_opened=1
+        for current_depth in range(1,own_config['depth']-1):
+            if current_depth in links_depth:
+                for each_link in links_depth[current_depth]:
+                    crawler.http_get(each_link, 'home.html')
 
+                    #check deadend
+                    header = open("header.txt", encoding='utf8')
+                    firstline=header.readline().rstrip()
+                    error=0
+                    for codes in error_codes: 
+                        error_message="HTTP/1.1 "+codes
+                        if firstline==error_message:
+                            error=1
+                    if error==1:
+                        continue        
+
+                    page_opened+=1
+                    web = open("home.html", encoding='utf8')
+                    soup = BeautifulSoup(web, "html.parser")
+                    
+                    find_words(soup,words)
+                    find_links(soup,links_depth,current_depth+1) 
+
+                    if page_opened==own_config['page']:
+                        break
                 if page_opened==own_config['page']:
-                    break;
-        if page_opened==own_config['page']:
-            break;            
-
-                
-
-
-
-
-
-    user_agent = own_config['user_agent']
-    crawler.http_get("http://songyy.pythonanywhere.com/quotes", 'home.html')
-    crawler.http_get("http://www.google.com", "home_1.html")
-
-
-             
-
-    own_config['choice'] = sys.args.choice   # breadth or depth
-    own_config['depth']= sys.args.depth      # depth of pages to crawling
-    own_config['page'] = sys.args.page       # number of pages to crawled pages
-
+                    break   
+            else:
+                break                
+    
     output_files(words,links_depth,login)
-
+           
 main()

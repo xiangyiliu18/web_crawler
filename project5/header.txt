@@ -1,24 +1,6 @@
-<<<<<<< HEAD
-HTTP/1.1 200 OK
+HTTP/1.1 405 METHOD NOT ALLOWED
 Server: openresty/1.9.15.1
-Date: Sun, 02 Dec 2018 01:03:51 GMT
+Date: Sun, 02 Dec 2018 04:08:18 GMT
 Content-Type: text/html; charset=utf-8
-Content-Length: 12408
-Connection: close
-Vary: Accept-Encoding
-X-Clacks-Overhead: GNU Terry Pratchett
-=======
-HTTP/1.0 200 OK
-Date: Sun, 02 Dec 2018 00:44:02 GMT
-Expires: -1
-Cache-Control: private, max-age=0
-Content-Type: text/html; charset=UTF-8
-P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
-Server: gws
-X-XSS-Protection: 1; mode=block
-X-Frame-Options: SAMEORIGIN
-Set-Cookie: 1P_JAR=2018-12-02-00; expires=Tue, 01-Jan-2019 00:44:02 GMT; path=/; domain=.google.com
-Set-Cookie: NID=148=HpaTBFfTXG_pn8-qNpCB8T4bSJg6-q8ZJdLVDZ1teCGLl7PAk-Y_F9fGqxnV1y-gdz2OSm2wXQ7ysHyZH2UFo0zC5rgLxYPLlmMxXjTIXNwXVhDXtgPXwbWixV8mx1LHUjBJyhk9m6ZBGOpMu2r-f0Rkf4SwZIMBBeOMwO5V1HU; expires=Mon, 03-Jun-2019 00:44:02 GMT; path=/; domain=.google.com; HttpOnly
-Accept-Ranges: none
-Vary: Accept-Encoding
->>>>>>> 023d8daef1967a6d4dd70039fae1fc7c98dcfc9d
+Content-Length: 42
+Connection: close
