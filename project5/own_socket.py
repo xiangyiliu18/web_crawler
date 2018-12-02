@@ -180,8 +180,9 @@ def create_dict(words_file):  ## words_file = base_words
     final_words.close()
 
 ##############################################
-#  Cawler  Class
+#  Cawler  Class  and basic function
 ###############################################
+
 class Crawler:
     def __init__(self):
         self.words = []  ### Empty words list
@@ -196,10 +197,11 @@ class Crawler:
         parser.add_argument('-d', '--depth', nargs='?', type=int, metavar='num', default=0, help="Maximum depth of pages to crawl", required=False)
         parser.add_argument('-p','--page', nargs='?', type=int, metavar='num', default=0, help='Maximum total number of crawled pages', required= False)
         sys.args = parser.parse_args()
-    
+    ############################################## Help #########################
     def help(self):
         parser.print_help()
 
+    ############################################## Http--Get #########################
     def http_get(self, url, filename):
         print("Get")
         global user_agent
@@ -207,6 +209,7 @@ class Crawler:
             self.sock=OneSocket()
             self.sock.get_response(url, filename)
 
+    ############################################## Http--Post #########################
     def http_post(self,url):
         print("Post")
         global user_agent
@@ -214,56 +217,15 @@ class Crawler:
             self.sock=OneSocket()
             self.sock.get_post(url)
 
+
+    ############################################## Links List #########################
+    def dfs(self, links_list):
+        print("DFS")
+
+
+
+
 ##############################################################################################
-
-# def create_dict(words_file):
-#     with open(words_file, 'r') as f:
-#         words_list=[]
-#         for line in f:
-#             words_list += line.split()
-#         f.close()
-
-#     new_words_list =[]
-#     for ele in words_list:
-#         temp = ele.lower()
-#         if temp not in new_words_list:
-#             new_words_list.append(temp)
-#     return new_words_list
-
-
-# All upper and lowercase permutations of a string
-lower_upper = open("lower_upper.txt", "w")
-
-
-def lower_upper_permutation(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            temp = list(capitalization_permutations(line))
-            for item in temp:
-                lower_upper.write("%s" % item)
-        f.close()
-    lower_upper.close()
-
-
-def capitalization_permutations(s):
-    """Generates the different ways of capitalizing the letters in
-    the string s."""
-
-    # >>> list(capitalization_permutations('abc'))
-    # ['ABC', 'aBC', 'AbC', 'abC', 'ABc', 'aBc', 'Abc', 'abc']
-    # >>> list(capitalization_permutations(''))
-    # ['']
-    # >>> list(capitalization_permutations('X*Y'))
-    # ['X*Y', 'x*Y', 'X*y', 'x*y']
-    if s == '':
-        yield ''
-        return
-    for rest in capitalization_permutations(s[1:]):
-        yield s[0].upper() + rest
-        if s[0].upper() != s[0].lower():
-            yield s[0].lower() + rest
-            
-
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
         return False
@@ -309,19 +271,6 @@ def output_files(words,links_depth,login):
     l.close()
 
 
-# reverse a word file
-reversed_words_file = open("reversed_words.txt", "w")
-
-
-def reverse_chars(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            reversed_words_file.write(reverse(line))
-            # print(reverse(line))
-        f.close()
-    reversed_words_file.close()
-
-
 def main():
     global user_agent
     global final_words
@@ -350,42 +299,22 @@ def main():
         exit(0) 
 
     #Depth First Search
-    if own_config['choice'] == 'depth':
+    # if own_config['choice'] == 'depth':
+    #     print("here")
 
-    #Breadth First Search
-    else:
-       page_opened=1
-       current_depth=1 
-       for cd in range(1,own_config['depth']-1):
-            for each_link in links_depth[cd]:
-                page_opened+=1
+    # #Breadth First Search
+    # else:
+    #    page_opened=1
+    #    current_depth=1 
+    #    for cd in range(1,own_config['depth']-1):
+    #         for each_link in links_depth[cd]:
+    #             page_opened+=1
                 
 
-                if page_opened==own_config['page']:
-                    break;
-        if page_opened==own_config['page']:
-            break;            
-
-                
-
-
-
-
-
-    user_agent = own_config['user_agent']
-    crawler.http_get("http://songyy.pythonanywhere.com/quotes", 'home.html')
-    crawler.http_get("http://www.google.com", "home_1.html")
-
-
-             
-
-    own_config['choice'] = sys.args.choice   # breadth or depth
-    own_config['depth']= sys.args.depth      # depth of pages to crawling
-    own_config['page'] = sys.args.page       # number of pages to crawled pages
-
+    #             if page_opened==own_config['page']:
+    #                 break;
+    #     if page_opened==own_config['page']:
+    #         break;            
     output_files(words,links_depth,login)
 
-# main()
-
-
-create_dict("words.txt")
+main()
