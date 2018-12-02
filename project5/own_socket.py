@@ -4,15 +4,23 @@ import argparse
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
+user_agent = None
+'''
+s = socket.socket()
+s.settimeout(5)   # 5 seconds
+try:
+    s.connect(('123.123.123.123', 12345))         # "random" IP address and port
+except socket.error, exc:
+    print "Caught exception socket.error : %s" % exc
+'''
 # count_page = -1
-class OwnSocket:
-    def __init__(self, sock=None):
-        if sock is None:
-            ### AF_INET---> refers to the address family ipv4
-            ### SOCK_STREAM ---> means connection oriented TCP protocol
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            self.sock = sock
+class OneSocket:
+    global user_agent
+    def __init__(self):
+        ### AF_INET---> refers to the address family ipv4
+        ### SOCK_STREAM ---> means connection oriented TCP protocol
+        ### This is client
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     '''
         self.sock.connect("http://songyy.pythonanywhere.com/quotes", 22)
@@ -20,25 +28,25 @@ class OwnSocket:
         in a request for the text of the page
     '''
     def connect(self, url):
-        global count_page
+        global user_agent
         url = urlparse(url)
         host = url.hostname
         path = url.path
         addr = socket.getaddrinfo(host, 80)[0][-1]
         self.sock.connect(addr)
-        sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-        # count_page++
-        if sent == 0:
+        if(user_agent):
+            sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (path, host, user_agent), 'utf8'))
+            if sent == 0:
                 raise RuntimeError("socket connection broken")
+        ############################## Get Response  ####################################
         total_data=[]
 
         while True:
-            data = self.sock.recv(2048)
+            data = self.sock.recv(4096)
             if data:
                 total_data.append(data)
             else:
                 break
-
         self.sock.close()
         return total_data
 
@@ -66,11 +74,14 @@ class OwnSocket:
 
 
 class Crawler:
+
     def __init__(self):
         self.words = []  ### Empty words list
         self.choice = 'depth' ##Depth-first(depth) / Breadth-first(breadth)
         self.maxD = 1 ##  max depth of pages to crawl
-        self.maxTotal = 0 ## max total number of pages 
+        self.maxTotal = 0 ## max total number of pages
+        self.sock = None 
+
         parser = argparse.ArgumentParser()
         parser.add_argument('-u', '--user', nargs='?', type=str, metavar='user_agent', help='must be provide a custom user-agent for use', required=True)
         parser.add_argument('-c', '--choice', nargs='?', type=str, choices=['depth','breadth'], default='depth', help="Depth-first/Breadth-first choice of crawling", required=False)
@@ -81,14 +92,31 @@ class Crawler:
     def help(self):
         parser.print_help()
 
+    def http_get(self, url, filename):
+        print("Get")
+        global user_agent
+        if user_agent:
+            self.sock=OneSocket()
+            self.sock.get_response(url, filename)
 
-def create_dict(words_file):
-    with open(words_file, 'r') as f:
-        words_list=[]
-        for line in f:
-            words_list += line.split()
-        f.close()
-        return words_list
+    def http_post(self):
+        print("Post")
+
+
+
+# def create_dict(words_file):
+#     with open(words_file, 'r') as f:
+#         words_list=[]
+#         for line in f:
+#             words_list += line.split()
+#         f.close()
+
+#     new_words_list =[]
+#     for ele in words_list:
+#         temp = ele.lower()
+#         if temp not in new_words_list:
+#             new_words_list.append(temp)
+#     return new_words_list
 
 
 # All upper and lowercase permutations of a string
@@ -161,11 +189,19 @@ def leet_speak(words_list):
     leet_speak_file.close()
 
 def main():
-    sock=OwnSocket()
-    sock.get_response("http://songyy.pythonanywhere.com/quotes", "home.html")
+    global user_agent
     crawler = Crawler()
     own_config = dict()
     own_config['user_agent']= sys.args.user  # one user_agent
+    own_config['choice'] = sys.args.choice  # breadth or depth
+    own_config['depth']= sys.args.depth  #  depth of pages to crawling
+    own_config['page'] = sys.args.page  # number of pages to crawled pages
+
+    user_agent = own_config['user_agent']
+    crawler.http_get("http://songyy.pythonanywhere.com/quotes", 'home.html')
+    crawler.http_get("http://www.google.com", "home_1.html")
+
+
     own_config['choice'] = sys.args.choice   # breadth or depth
     own_config['depth']= sys.args.depth      # depth of pages to crawling
     own_config['page'] = sys.args.page       # number of pages to crawled pages
