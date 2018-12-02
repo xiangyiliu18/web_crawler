@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 http://songyy.pythonanywhere.com/quoteshttp://songyy.pythonanywhere.com/
 http://songyy.pythonanywhere.com/home
 http://songyy.pythonanywhere.com/food
@@ -48,7 +47,4 @@ http://songyy.pythonanywhere.com/tag/reading/
 http://songyy.pythonanywhere.com/tag/friendship/
 http://songyy.pythonanywhere.com/tag/friends/
 http://songyy.pythonanywhere.com/tag/truth/
-http://songyy.pythonanywhere.com/tag/simile/http://songyy.pythonanywhere.com/dead_page_405
-=======
-http://songyy.pythonanywhere.com/quotes
->>>>>>> 7b16f41033bdedc1031d361e2778f3ead101e46f
+http://songyy.pythonanywhere.com/tag/simile/
