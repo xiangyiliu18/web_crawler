@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Yahee
 Home
 Food
@@ -392,3 +393,5 @@ Method
 is
 not
 allowed!!!
+=======
+>>>>>>> 7b16f41033bdedc1031d361e2778f3ead101e46f

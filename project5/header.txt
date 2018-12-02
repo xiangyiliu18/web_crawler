@@ -1,6 +1,22 @@
+<<<<<<< HEAD
 HTTP/1.1 405 METHOD NOT ALLOWED
 Server: openresty/1.9.15.1
 Date: Sun, 02 Dec 2018 04:08:18 GMT
 Content-Type: text/html; charset=utf-8
 Content-Length: 42
 Connection: close
+=======
+HTTP/1.0 200 OK
+Date: Sun, 02 Dec 2018 02:16:57 GMT
+Expires: -1
+Cache-Control: private, max-age=0
+Content-Type: text/html; charset=UTF-8
+P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+Server: gws
+X-XSS-Protection: 1; mode=block
+X-Frame-Options: SAMEORIGIN
+Set-Cookie: 1P_JAR=2018-12-02-02; expires=Tue, 01-Jan-2019 02:16:57 GMT; path=/; domain=.google.com
+Set-Cookie: NID=148=HiYNmgWgHloJVsNKR2eNZv6Gje4JQuFCVaJc8U6EzDRbGZem2gtOn2TNbv7-eiAo_MvflWZqkxCsRvxdjjWk18ohM5bgJ-oOO5YlAM9nEZfxHeVl12O_4wpEcUYRdgYn7nQCWQkfWV0FBJWQGdXyzxKkYGWk9A1SW8ViVm0R0EY; expires=Mon, 03-Jun-2019 02:16:57 GMT; path=/; domain=.google.com; HttpOnly
+Accept-Ranges: none
+Vary: Accept-Encoding
+>>>>>>> 7b16f41033bdedc1031d361e2778f3ead101e46f
