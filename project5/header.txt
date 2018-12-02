@@ -1,11 +1,9 @@
-HTTP/1.0 200 OK
-Accept-Ranges: none
-Vary: Accept-Encoding
-Content-Type: text/html
-Date: Sun, 02 Dec 2018 08:37:57 GMT
-Expires: Sun, 02 Dec 2018 08:37:57 GMT
-Cache-Control: private, max-age=0
-Last-Modified: Fri, 22 Jun 2018 10:00:00 GMT
+HTTP/1.0 302 Found
+Location: https://admob.google.com/home/
+Cache-Control: private
+Content-Type: text/html; charset=UTF-8
 X-Content-Type-Options: nosniff
+Date: Sun, 02 Dec 2018 18:46:59 GMT
 Server: sffe
+Content-Length: 227
 X-XSS-Protection: 1; mode=block

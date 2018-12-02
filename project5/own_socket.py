@@ -47,12 +47,6 @@ class OneSocket:
         self.sock.connect(addr)
         return (host, path)
 
-    def get_request(self, url, filename):  ## one page response
-        temp = self.connect(url)
-        if(user_agent):
-            sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0], user_agent), 'utf8'))
-        return (host,path)
-
     def get_response(self, url, filename):  ## one page response
         tmp=self.connect(url)
         if(user_agent):
@@ -83,56 +77,55 @@ class OneSocket:
             f.write(content)
             f.close()
 
-    def post_request(self, url,userName,password):
-        url = urlparse(url)
-        host = url.hostname
-        port = url.port
-        phose = 'proxy_host'
-        if port is None:
-            port = 80
+    # def post_request(self, url,userName,password):
+    #     url = urlparse(url)
+    #     host = url.hostname
+    #     port = url.port
+    #     phose = 'proxy_host'
+    #     if port is None:
+    #         port = 80
 
 
+    #     addr = socket.getaddrinfo(host, 80)[0][-1]
+    #     self.sock.connect(addr)
+    #     return (host, path)
+    #     if(user_agent):
+    #         user_pass = base64.encodingstring(userName+":"+password)
+    #         proxy_authorization = 'Proxy-authorization: Basic '+user_pass+'\r\n'
+    #         post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nProxy-authorization: Basic %s:%s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0],userName,password,user_agent)
+    #         sent = self.sock.sendall(bytes(post_msg, 'utf8'))
 
-        addr = socket.getaddrinfo(host, 80)[0][-1]
-        self.sock.connect(addr)
-        return (host, path)
-        if(user_agent):
-            user_pass = base64.encodingstring(userName+":"+password)
-            proxy_authorization = 'Proxy-authorization: Basic '+user_pass+'\r\n'
-            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nProxy-authorization: Basic %s:%s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0],userName,password,user_agent)
-            sent = self.sock.sendall(bytes(post_msg, 'utf8'))
+    # def get_post(self, url):
+    #     tmp=self.connect(url)
+    #     if(user_agent):
+    #         post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (tmp[1],tmp[0],userName,password,user_agent)
+    #         sent = self.sock.sendall(bytes(post_msg), 'utf8')
+    #         if sent == 0:
+    #             raise RuntimeError("socket connection broken")
+    #     ############################## Get Response  ####################################
+    #     response=[]
 
-    def get_post(self, url):
-        tmp=self.connect(url)
-        if(user_agent):
-            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (tmp[1],tmp[0],userName,password,user_agent)
-            sent = self.sock.sendall(bytes(post_msg), 'utf8')
-            if sent == 0:
-                raise RuntimeError("socket connection broken")
-        ############################## Get Response  ####################################
-        response=[]
+    #     while True:
+    #         data = self.sock.recv(4096)
+    #         if data:
+    #             response.append(data)
+    #         else:
+    #             break
+    #     self.sock.close()
 
-        while True:
-            data = self.sock.recv(4096)
-            if data:
-                response.append(data)
-            else:
-                break
-        self.sock.close()
+    #     response = b''.join(response)
+    #     all_content = response.decode("utf8", "ignore")
 
-        response = b''.join(response)
-        all_content = response.decode("utf8", "ignore")
+    #     header = all_content.split('\r\n\r\n')[0]
+    #     with open("header_post.txt", "w") as f:
+    #         f.write(header)
+    #         f.close()
 
-        header = all_content.split('\r\n\r\n')[0]
-        with open("header_post.txt", "w") as f:
-            f.write(header)
-            f.close()
-
-        content = all_content.split('\r\n\r\n')[1]
-        content = content.encode()
-        with open("login.txt", 'wb') as f:
-            f.write(content)
-            f.close()
+    #     content = all_content.split('\r\n\r\n')[1]
+    #     content = content.encode()
+    #     with open("login.txt", 'wb') as f:
+    #         f.write(content)
+    #         f.close()
 
 '''
 ##############################################################
@@ -240,15 +233,15 @@ class Crawler:
         global user_agent
         if user_agent:
             self.sock=OneSocket()
-            self.sock.get_request(url, filename)
+            self.sock.get_response(url, filename)
 
     ############################################## Http--Post #########################
-    def http_post(self,url,userName, password):
-        print("Post")
-        global user_agent
-        if user_agent:
-            self.sock=OneSocket()
-            self.sock.post_request(url,userName,password)
+    # def http_post(self,url,userName, password):
+    #     print("Post")
+    #     global user_agent
+    #     if user_agent:
+    #         self.sock=OneSocket()
+    #         self.sock.post_request(url,userName,password)
 
 
     ############################################## Links List #########################
@@ -397,8 +390,7 @@ def main():
     header = open("header.txt", encoding='utf8')
     firstline=header.readline().rstrip()
     code = firstline.split(" ")[1]
-
-    if error in error_codes:
+    if code in error_codes:
         print("No available website can be crawled")
         exit(0)  
 
