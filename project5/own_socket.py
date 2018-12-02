@@ -14,7 +14,7 @@ import re
 
 links_depth={} #For BFS
 
-starting_page="http://songyy.pythonanywhere.com/quotes"
+starting_page="http://www.google.com"
 
 words_file = None
 user_agent = None
@@ -255,7 +255,13 @@ def find_links(soup,links_depth,depth,logins,crawler):
     allLinks = soup.findAll('a',href=True)
     temp_list = []
     for n in allLinks:
-        thehttp=urljoin(starting_page,n['href'])
+        #check domain
+        if (urlparse(n['href']).hostname)==None:
+            thehttp=urljoin(starting_page,n['href'])
+        else:
+            if (urlparse(n['href']).hostname) != (urlparse(starting_page).hostname):
+                continue
+            thehttp=n['href']
         
         #check if the link is already in the dict
         found=0
@@ -282,9 +288,12 @@ def login_page(html,crawler):
 
     allforms = soup2.findAll('form')
     for form in allforms:
-        if bool(re.search('(?i)log[\s_]*in(?i)', form.get('name')))==True:
+        if form.get('name')==None:
+            continue
+        s=form.get('name').encode().decode()
+        if bool(re.search('log[\s_]*in',s ,re.IGNORECASE))==True:
             return True
-        if bool(re.search('(?i)sign[\s_]*in(?i)', form.get('name')))==True:
+        if bool(re.search('sign[\s_]*in', s,re.IGNORECASE))==True:
             return True
     return False        
 
@@ -391,5 +400,4 @@ def main():
                 break                
 
     output_files(words,links_depth,logins)
-
 main()
