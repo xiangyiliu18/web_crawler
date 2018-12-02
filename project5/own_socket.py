@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import socket
 import sys
 import argparse
@@ -33,6 +34,8 @@ try:
 except socket.error, exc:
     print "Caught exception socket.error : %s" % exc
 '''
+=======
+>>>>>>> 258de193357a3d7e419dddbd41c7371e7022e50f
 class OneSocket:
     global user_agent
     def __init__(self):
@@ -223,6 +226,7 @@ class Crawler:
 
         parser = argparse.ArgumentParser()
         parser.add_argument('-u', '--user', nargs='?', type=str, metavar='user_agent', help='must be provide a custom user-agent for use', required=True)
+        #parser.add_argument('url', type=str, help="website's url", required=True)
         parser.add_argument('-c', '--choice', nargs='?', type=str, choices=['depth','breadth'], default='breadth', help="Depth-first/Breadth-first choice of crawling", required=False)
         parser.add_argument('-d', '--depth', nargs='?', type=int, metavar='num', default=0, help="Maximum depth of pages to crawl", required=False)
         parser.add_argument('-p','--page', nargs='?', type=int, metavar='num', default=0, help='Maximum total number of crawled pages', required= False)
@@ -285,7 +289,6 @@ class Crawler:
         #         break      
 
 
-
 ##############################################################################################
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
@@ -293,6 +296,7 @@ def tag_visible(element):
     if isinstance(element, Comment):
         return False
     return True
+
 
 #finding and putting all the words found on the website into the list words[] 
 def find_words(soup,words):
