@@ -9,11 +9,6 @@ def tag_visible(element):
         return False
     return True
 
-#Depth-first/Breadth-first choice of crawling
-#Maximum depth of pages to crawl
-#Maximum total number of crawled pages
-#
-
 words=[]
 links=[]
 

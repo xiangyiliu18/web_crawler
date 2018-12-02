@@ -2,6 +2,11 @@ import socket
 import sys
 import argparse
 from bs4 import BeautifulSoup
+from bs4.element import Comment
+from urllib.parse import urljoin
+
+
+links_depth={}
 
 # count_page = -1
 class OwnSocket:
@@ -87,9 +92,54 @@ def create_base_dict(words_file):
         f.close()
         return words_list
 
+def tag_visible(element):
+    if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
+        return False
+    if isinstance(element, Comment):
+        return False
+    return True
+
+#finding and putting all the words found on the website into the list words[] 
+def find_words(soup,words):
+    texts = soup.find_all(text=True)
+    visible_texts = list(filter(tag_visible, texts)) 
+    for n in range(len(visible_texts)):
+        tmp=visible_texts[n].split()
+        for i in range(len(tmp)):
+            words.append(tmp[i])
+
+#finding and putting all the links found on the website into the list links_depth[] at a specific level
+def find_links(soup,links_depth,depth):
+    allLinks = soup.findAll('a',href=True)
+    temp_list = []
+    for n in allLinks:
+        temp_list.append(urljoin("http://songyy.pythonanywhere.com/quotes",n['href']))
+
+    if depth in links_depth:
+        links_depth[depth].extend(temp_list)
+    else:
+        links_depth[depth]=temp_list
+ 
+
+#writing to output files
+def output_files(words,links_depth,login):
+    new_words =('\n'.join(words)).encode('utf-8','ignore')
+    w = open("words.txt", "wb")
+    w.write(new_words)
+
+    #global links_depth
+    l = open("links.txt", "wb")
+    for n in links_depth:
+        new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
+        l.write(new_links)
+
+    w.close()
+    l.close()
 
 
 def main():
+   #global links_depth
+
     crawler = Crawler()
     sock=OwnSocket()
     sock.get_response("http://songyy.pythonanywhere.com/quotes", "home.html")
@@ -100,8 +150,42 @@ def main():
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
 
+    #3 lists
+    words=[]
+    login=[]
+
+    web = open("home.html", encoding='utf8')
+    soup = BeautifulSoup(web, "html.parser")
+    links_depth[0]= ["http://songyy.pythonanywhere.com/quotes"]
+
+    find_words(soup,words)
+    find_links(soup,links_depth,1)   
+
+    # depth=1 || page=1
+    if own_config['depth']==1 or own_config['page']==1:
+        output_files(words,links_depth,login)
+        exit(0) 
+
+    if own_config['choice'] == 'depth':
+        print("DEPTH\n")
+
+    else:
+       print("BREADTH\n")
+
+       page_opened=1
+       current_depth=1 
+       for cd in range(1,own_config['depth']-1):
+            for each_link in links_depth[cd]:
+                page_opened+=1
+                
 
 
 
+
+
+             
+
+
+    output_files(words,links_depth,login)
 
 main()
