@@ -43,11 +43,12 @@ class OneSocket:
         path = url.path
         addr = socket.getaddrinfo(host, 80)[0][-1]
         self.sock.connect(addr)
+        return (host,path)
 
     def get_response(self, url, filename):  ## one page response
-        self.connect(url)
+        tmp=self.connect(url)
         if(user_agent):
-            sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (path, host, user_agent), 'utf8'))
+            sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (tmp[1], tmp[0], user_agent), 'utf8'))
             if sent == 0:
                 raise RuntimeError("socket connection broken")
         ############################## Get Response  ####################################
@@ -76,9 +77,9 @@ class OneSocket:
             f.close()
 
     def get_post(self, url):
-        self.connect(url)
+        tmp=self.connect(url)
         if(user_agent):
-            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (path, host,userName,password,user_agent)
+            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (tmp[1],tmp[0],userName,password,user_agent)
             sent = self.sock.sendall(bytes(post_msg), 'utf8')
             if sent == 0:
                 raise RuntimeError("socket connection broken")
@@ -200,7 +201,7 @@ class Crawler:
 
         parser = argparse.ArgumentParser()
         parser.add_argument('-u', '--user', nargs='?', type=str, metavar='user_agent', help='must be provide a custom user-agent for use', required=True)
-        parser.add_argument('-c', '--choice', nargs='?', type=str, choices=['depth','breadth'], default='depth', help="Depth-first/Breadth-first choice of crawling", required=False)
+        parser.add_argument('-c', '--choice', nargs='?', type=str, choices=['depth','breadth'], default='breadth', help="Depth-first/Breadth-first choice of crawling", required=False)
         parser.add_argument('-d', '--depth', nargs='?', type=int, metavar='num', default=0, help="Maximum depth of pages to crawl", required=False)
         parser.add_argument('-p','--page', nargs='?', type=int, metavar='num', default=0, help='Maximum total number of crawled pages', required= False)
         sys.args = parser.parse_args()
@@ -250,7 +251,7 @@ def find_words(soup,words):
             words.append(tmp[i])
 
 #finding and putting all the links found on the website into the list links_depth[] at a specific level
-def find_links(soup,links_depth,depth):
+def find_links(soup,links_depth,depth,logins,crawler):
     allLinks = soup.findAll('a',href=True)
     temp_list = []
     for n in allLinks:
@@ -263,7 +264,9 @@ def find_links(soup,links_depth,depth):
                 found=1
         if thehttp in temp_list:
             found=1
-        if found==0:        
+        if found==0:
+            if login_page(thehttp,crawler)==True:
+                logins.append(thehttp)        
             temp_list.append(thehttp)
 
     if depth in links_depth:
@@ -271,9 +274,22 @@ def find_links(soup,links_depth,depth):
     else:
         links_depth[depth]=temp_list
  
+#check if it is a login page
+def login_page(html,crawler):
+    crawler.http_get(html , 'check.html')
+    website = open("check.html", encoding='utf8')
+    soup2 = BeautifulSoup(website, "html.parser")
+
+    allforms = soup2.findAll('form')
+    for form in allforms:
+        if bool(re.search('(?i)log[\s_]*in(?i)', form.get('name')))==True:
+            return True
+        if bool(re.search('(?i)sign[\s_]*in(?i)', form.get('name')))==True:
+            return True
+    return False        
 
 #writing to output files
-def output_files(words,links_depth,login):
+def output_files(words,links_depth,logins):
     new_words =('\n'.join(words)).encode('utf-8','ignore')
     w = open("words.txt", "wb")
     w.write(new_words)
@@ -283,48 +299,18 @@ def output_files(words,links_depth,login):
         new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
         l.write(new_links)
 
+    new_logins =('\n'.join(logins)).encode('utf-8','ignore')
+    log = open("logins.txt", "wb")
+    log.write(new_logins)   
+
     w.close()
     l.close()
-
-# reverse a word file
-reversed_words_file = open("reversed_words.txt", "w")
-
-
-def reverse_chars(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            reversed_words_file.write(reverse(line))
-            # print(reverse(line))
-        f.close()
-    reversed_words_file.close()
-
-
-# Function to reverse a string
-def reverse(string):
-    string = string[::-1]
-    return string
-
-
-# leet-speak with the following case-insensitive conversions:
-leet_speak_file = open("leet_speak_file.txt", "w")
-
-
-def leet_speak(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            line = line.replace('a', '4').replace('A', '4')
-            line = line.replace('e', '3').replace('E', '3')
-            line = line.replace('l', '1').replace('L', '1')
-            line = line.replace('t', '7').replace('T', '7')
-            line = line.replace('o', '0').replace('O', '0')
-            leet_speak_file.write(line)
-        f.close()
-    leet_speak_file.close()
-
+    log.close()
 
 def main():
     global user_agent
     global final_words
+    global starting_page
 
     crawler = Crawler()
     own_config = dict()
@@ -342,37 +328,38 @@ def main():
         error_message="HTTP/1.1 "+codes
         if firstline==error_message:
             print("Cannot open this page!")
-            exit(1)
-            
+            exit(1)        
 
     #2 lists
     words=[]
-    login=[]
+    logins=[]
 
     web = open("home.html", encoding='utf8')
     soup = BeautifulSoup(web, "html.parser")
     links_depth[0]= [starting_page]
 
+    if login_page(starting_page,crawler)==True:
+        logins.append(starting_page)
     find_words(soup,words)
-    find_links(soup,links_depth,1) 
+    find_links(soup,links_depth,1,logins,crawler) 
 
     # depth=1 || page=1
     if own_config['depth']==1 or own_config['page']==1:
-        output_files(words,links_depth,login)
+        output_files(words,links_depth,logins)
         exit(0) 
 
     #Depth First Search
     if own_config['choice'] == 'depth':
         print("HI")
         
-    #hardcoding it first may change this value later
-    if(own_config['depth']==0):
-        own_config['depth']=1000
-
     # Breadth First Search
     else:
         page_opened=1
-        for current_depth in range(1,own_config['depth']-1):
+        current_depth=1
+
+        while(True):
+            if own_config['depth']!=0 and current_depth==own_config['depth']:
+                break
             if current_depth in links_depth:
                 for each_link in links_depth[current_depth]:
                     crawler.http_get(each_link, 'home.html')
@@ -393,33 +380,16 @@ def main():
                     soup = BeautifulSoup(web, "html.parser")
                     
                     find_words(soup,words)
-                    find_links(soup,links_depth,current_depth+1) 
+                    find_links(soup,links_depth,current_depth+1,logins,crawler) 
 
                     if page_opened==own_config['page']:
                         break
                 if page_opened==own_config['page']:
-                    break   
+                    break 
+                current_depth+=1      
             else:
                 break                
-    
 
-    # if own_config['choice'] == 'depth':
-    #     print("here")
+    output_files(words,links_depth,logins)
 
-    # #Breadth First Search
-    # else:
-    #    page_opened=1
-    #    current_depth=1 
-    #    for cd in range(1,own_config['depth']-1):
-    #         for each_link in links_depth[cd]:
-    #             page_opened+=1
-                
-
-    #             if page_opened==own_config['page']:
-    #                 break;
-    #     if page_opened==own_config['page']:
-    #         break;            
-
-    output_files(words,links_depth,login)
-           
 main()
