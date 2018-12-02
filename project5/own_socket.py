@@ -5,11 +5,14 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from urllib.parse import urljoin
-
+import re
 
 links_depth={}
 
+words_file = None
 user_agent = None
+
+final_words= open("words_list.txt", "w+", encoding='utf-8')
 '''
 s = socket.socket()
 s.settimeout(5)   # 5 seconds
@@ -18,7 +21,6 @@ try:
 except socket.error, exc:
     print "Caught exception socket.error : %s" % exc
 '''
-# count_page = -1
 class OneSocket:
     global user_agent
     def __init__(self):
@@ -27,11 +29,6 @@ class OneSocket:
         ### This is client
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    '''
-        self.sock.connect("http://songyy.pythonanywhere.com/quotes", 22)
-        onc the connect completes, the socket 'sock' can be used to send
-        in a request for the text of the page
-    '''
     def connect(self, url):
         global user_agent
         url = urlparse(url)
@@ -39,25 +36,24 @@ class OneSocket:
         path = url.path
         addr = socket.getaddrinfo(host, 80)[0][-1]
         self.sock.connect(addr)
+
+    def get_response(self, url, filename):  ## one page response
+        self.connect(url)
         if(user_agent):
             sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (path, host, user_agent), 'utf8'))
             if sent == 0:
                 raise RuntimeError("socket connection broken")
         ############################## Get Response  ####################################
-        total_data=[]
+        response=[]
 
         while True:
             data = self.sock.recv(4096)
             if data:
-                total_data.append(data)
+                response.append(data)
             else:
                 break
         self.sock.close()
-        return total_data
 
-
-    def get_response(self, url, filename):  ## one page response
-        response = self.connect(url)
         response = b''.join(response)
         all_content = response.decode("utf8", "ignore")
 
@@ -72,14 +68,121 @@ class OneSocket:
             f.write(content)
             f.close()
 
+    def get_post(self, url):
+        self.connect(url)
+        if(user_agent):
+            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (path, host,userName,password,user_agent)
+            sent = self.sock.sendall(bytes(post_msg), 'utf8')
+            if sent == 0:
+                raise RuntimeError("socket connection broken")
+        ############################## Get Response  ####################################
+        response=[]
+
+        while True:
+            data = self.sock.recv(4096)
+            if data:
+                response.append(data)
+            else:
+                break
+        self.sock.close()
+
+        response = b''.join(response)
+        all_content = response.decode("utf8", "ignore")
+
+        header = all_content.split('\r\n\r\n')[0]
+        with open("header_post.txt", "w") as f:
+            f.write(header)
+            f.close()
+
+        content = all_content.split('\r\n\r\n')[1]
+        content = content.encode()
+        with open("body_post.txt", 'wb') as f:
+            f.write(content)
+            f.close()
+
+'''
+##############################################################
+   Create 'wordsList'
 ###############################################################
-  # 1. The scraping rules can be found in the robots.txt file.  which can be 
-  #     found by adding a/robots.txt path to the main domain of the site
-###############################################################
+'''
+def capitalization_permutations(s):
+    """Generates the different ways of capitalizing the letters in
+    the string s."""
+
+    # >>> list(capitalization_permutations('abc'))
+    # ['ABC', 'aBC', 'AbC', 'abC', 'ABc', 'aBc', 'Abc', 'abc']
+    # >>> list(capitalization_permutations(''))
+    # ['']
+    # >>> list(capitalization_permutations('X*Y'))
+    # ['X*Y', 'x*Y', 'X*y', 'x*y']
+    if s == '':
+        yield ''
+        return
+    for rest in capitalization_permutations(s[1:]):
+        yield s[0].upper() + rest
+        if s[0].upper() != s[0].lower():
+            yield s[0].lower() + rest
+
+def lower_upper_permutation(words_list):
+    global final_words
+
+    for line in words_list:
+        temp = list(capitalization_permutations(line))
+        for item in temp:
+            final_words.write("%s\n" % item)
+
+# Function to reverse a string
+def reverse(string):
+    string = string[::-1]
+    return string
+
+# reverse
+def reverse_chars(words_list):
+    global final_words
+
+    for line in words_list:
+        final_words.write("%s\n" %reverse(line))
 
 
+# leet-speak with the following case-insensitive conversions
+def leet_speak(words_list):
+    global final_words
+
+    for line in words_list:
+        line = line.replace('a', '4').replace('A', '4')
+        line = line.replace('e', '3').replace('E', '3')
+        line = line.replace('l', '1').replace('L', '1')
+        line = line.replace('t', '7').replace('T', '7')
+        line = line.replace('o', '0').replace('O', '0')
+        final_words.write("%s\n" %line)
+
+
+def create_dict(words_file):  ## words_file = base_words
+    words_list =[]
+    base_words = open("base_words.txt", 'w', encoding='utf-8')
+    with open(words_file, mode="r", encoding='utf-8') as f:
+        for line in f:
+            temp = line.lower()
+            temp= re.sub(r'\W+', '', temp)
+            if temp not in words_list:
+                base_words.write("%s\n" %temp)
+                words_list.append(temp)
+        f.close()
+    base_words.close()
+
+    if words_list != []:
+        print(words_list)
+        final_words = open("words_list.txt", 'w+', encoding='utf-8')
+        lower_upper_permutation(words_list)
+        reverse_chars(words_list)
+        leet_speak(words_list)
+
+    final_words.close()
+
+##############################################
+#  Cawler  Class
+###############################################
 class Crawler:
-
     def __init__(self):
         self.words = []  ### Empty words list
         self.choice = 'depth' ##Depth-first(depth) / Breadth-first(breadth)
@@ -104,51 +207,14 @@ class Crawler:
             self.sock=OneSocket()
             self.sock.get_response(url, filename)
 
-    def http_post(self):
+    def http_post(self,url):
         print("Post")
+        global user_agent
+        if user_agent:
+            self.sock=OneSocket()
+            self.sock.get_post(url)
 
-
-
-# def create_dict(words_file):
-#     with open(words_file, 'r') as f:
-#         words_list=[]
-#         for line in f:
-#             words_list += line.split()
-#         f.close()
-
-#     new_words_list =[]
-#     for ele in words_list:
-#         temp = ele.lower()
-#         if temp not in new_words_list:
-#             new_words_list.append(temp)
-#     return new_words_list
-
-
-# All upper and lowercase permutations of a string
-lower_upper = open("lower_upper.txt", "w")
-
-
-def lower_upper_permutation(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            temp = list(capitalization_permutations(line))
-            for item in temp:
-                lower_upper.write("%s" % item)
-        f.close()
-    lower_upper.close()
-
-
-def capitalization_permutations(s):
-    """Generates the different ways of capitalizing the letters in
-    the string s."""
-
-    # >>> list(capitalization_permutations('abc'))
-    # ['ABC', 'aBC', 'AbC', 'abC', 'ABc', 'aBc', 'Abc', 'abc']
-    # >>> list(capitalization_permutations(''))
-    # ['']
-    # >>> list(capitalization_permutations('X*Y'))
-    # ['X*Y', 'x*Y', 'X*y', 'x*y']
-
+##############################################################################################
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
         return False
@@ -192,54 +258,12 @@ def output_files(words,links_depth,login):
 
     w.close()
     l.close()
-    if s == '':
-        yield ''
-        return
-    for rest in capitalization_permutations(s[1:]):
-        yield s[0].upper() + rest
-        if s[0].upper() != s[0].lower():
-            yield s[0].lower() + rest
 
-
-
-# reverse a word file
-reversed_words_file = open("reversed_words.txt", "w")
-
-
-def reverse_chars(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            reversed_words_file.write(reverse(line))
-            # print(reverse(line))
-        f.close()
-    reversed_words_file.close()
-
-
-# Function to reverse a string
-def reverse(string):
-    string = string[::-1]
-    return string
-
-
-# leet-speak with the following case-insensitive conversions:
-leet_speak_file = open("leet_speak_file.txt", "w")
-
-
-def leet_speak(words_list):
-    with open(words_list, 'r') as f:
-        for line in f:
-            line = line.replace('a', '4').replace('A', '4')
-            line = line.replace('e', '3').replace('E', '3')
-            line = line.replace('l', '1').replace('L', '1')
-            line = line.replace('t', '7').replace('T', '7')
-            line = line.replace('o', '0').replace('O', '0')
-            leet_speak_file.write(line)
-        f.close()
-    leet_speak_file.close()
 
 def main():
    #global links_depth
     global user_agent
+    global final_words
 
     crawler = Crawler()
     own_config = dict()
@@ -247,7 +271,6 @@ def main():
     own_config['choice'] = sys.args.choice  # breadth or depth
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
-
 
     #3 lists
     words=[]
@@ -295,4 +318,7 @@ def main():
 
     output_files(words,links_depth,login)
 
-main()
+# main()
+
+
+create_dict("words.txt")
