@@ -215,6 +215,55 @@ class Crawler:
             self.sock.get_post(url)
 
 ##############################################################################################
+
+# def create_dict(words_file):
+#     with open(words_file, 'r') as f:
+#         words_list=[]
+#         for line in f:
+#             words_list += line.split()
+#         f.close()
+
+#     new_words_list =[]
+#     for ele in words_list:
+#         temp = ele.lower()
+#         if temp not in new_words_list:
+#             new_words_list.append(temp)
+#     return new_words_list
+
+
+# All upper and lowercase permutations of a string
+lower_upper = open("lower_upper.txt", "w")
+
+
+def lower_upper_permutation(words_list):
+    with open(words_list, 'r') as f:
+        for line in f:
+            temp = list(capitalization_permutations(line))
+            for item in temp:
+                lower_upper.write("%s" % item)
+        f.close()
+    lower_upper.close()
+
+
+def capitalization_permutations(s):
+    """Generates the different ways of capitalizing the letters in
+    the string s."""
+
+    # >>> list(capitalization_permutations('abc'))
+    # ['ABC', 'aBC', 'AbC', 'abC', 'ABc', 'aBc', 'Abc', 'abc']
+    # >>> list(capitalization_permutations(''))
+    # ['']
+    # >>> list(capitalization_permutations('X*Y'))
+    # ['X*Y', 'x*Y', 'X*y', 'x*y']
+    if s == '':
+        yield ''
+        return
+    for rest in capitalization_permutations(s[1:]):
+        yield s[0].upper() + rest
+        if s[0].upper() != s[0].lower():
+            yield s[0].lower() + rest
+            
+
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
         return False
@@ -260,8 +309,20 @@ def output_files(words,links_depth,login):
     l.close()
 
 
+# reverse a word file
+reversed_words_file = open("reversed_words.txt", "w")
+
+
+def reverse_chars(words_list):
+    with open(words_list, 'r') as f:
+        for line in f:
+            reversed_words_file.write(reverse(line))
+            # print(reverse(line))
+        f.close()
+    reversed_words_file.close()
+
+
 def main():
-   #global links_depth
     global user_agent
     global final_words
 
@@ -288,17 +349,23 @@ def main():
         output_files(words,links_depth,login)
         exit(0) 
 
+    #Depth First Search
     if own_config['choice'] == 'depth':
-        print("DEPTH\n")
 
+    #Breadth First Search
     else:
-       print("BREADTH\n")
-
        page_opened=1
        current_depth=1 
        for cd in range(1,own_config['depth']-1):
             for each_link in links_depth[cd]:
                 page_opened+=1
+                
+
+                if page_opened==own_config['page']:
+                    break;
+        if page_opened==own_config['page']:
+            break;            
+
                 
 
 
