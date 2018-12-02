@@ -460,7 +460,20 @@ def main():
                     break 
                 current_depth+=1      
             else:
-                break                
+                break 
+
+    # We should crawl more pages!
+    # Using Subdomains
+    if(own_config['page']==0 or page_opened<own_config['page'])
+    {
+        subdomains=[]
+        sd = open("subdomains.txt", encoding='utf8')
+        for line in sd:
+            subdomains.append(line.rstrip())
+
+        str="https://wordpress.org/"    
+
+    }                          
 
     output_files(words,links_depth,logins)
 main()
