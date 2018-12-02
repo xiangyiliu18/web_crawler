@@ -238,7 +238,6 @@ def leet_speak(words_list):
     leet_speak_file.close()
 
 def main():
-   #global links_depth
     global user_agent
 
     crawler = Crawler()
@@ -247,7 +246,6 @@ def main():
     own_config['choice'] = sys.args.choice  # breadth or depth
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
-
 
     #3 lists
     words=[]
@@ -265,17 +263,23 @@ def main():
         output_files(words,links_depth,login)
         exit(0) 
 
+    #Depth First Search
     if own_config['choice'] == 'depth':
-        print("DEPTH\n")
 
+    #Breadth First Search
     else:
-       print("BREADTH\n")
-
        page_opened=1
        current_depth=1 
        for cd in range(1,own_config['depth']-1):
             for each_link in links_depth[cd]:
                 page_opened+=1
+                
+
+                if page_opened==own_config['page']:
+                    break;
+        if page_opened==own_config['page']:
+            break;            
+
                 
 
 
