@@ -3,8 +3,7 @@ Web Crawler + Form Brute
 Cheryl
 
 2. Info
-"http://songyy.pythonanywhere.com/quotes"
-"http://blog.groupof4.com"
+"http://songyy.pythonanywhere.com"
 
 login_url = "https://3.16.240.57/wp-login.php"
 starting_page = "http://songyy.pythonanywhere.com/quotes"
