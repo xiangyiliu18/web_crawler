@@ -5,14 +5,16 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from urllib.parse import urljoin
+import base64
+#import httplib
 
 
-error_codes=['400 BAD REQUEST', '401 UNAUTHORIZED', '403 FORBIDDEN','404 NOT FOUND','410 GONE','500 INTERNAL SERVER ERROR','501 NOT IMPLEMENTED','503 SERVICE UNAVAILABLE','550 PERMISSION DENIED']
+error_codes={'400':'BAD REQUEST', '401': 'UNAUTHORIZED', '403': 'FORBIDDEN','404': 'NOT FOUND','410':' GONE','500': 'INTERNAL SERVER ERROR','501': 'NOT IMPLEMENTED','503':'SERVICE UNAVAILABLE','550':'PERMISSION DENIED'}
 
 import re
 
 
-links_depth={} #For BFS
+links_depth={} #For BFS/DFS
 
 starting_page="http://www.google.com"
 
@@ -43,6 +45,12 @@ class OneSocket:
         path = url.path
         addr = socket.getaddrinfo(host, 80)[0][-1]
         self.sock.connect(addr)
+        return (host, path)
+
+    def get_request(self, url, filename):  ## one page response
+        temp = self.connect(url)
+        if(user_agent):
+            sent = self.sock.sendall(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0], user_agent), 'utf8'))
         return (host,path)
 
     def get_response(self, url, filename):  ## one page response
@@ -53,7 +61,6 @@ class OneSocket:
                 raise RuntimeError("socket connection broken")
         ############################## Get Response  ####################################
         response=[]
-
         while True:
             data = self.sock.recv(4096)
             if data:
@@ -75,6 +82,25 @@ class OneSocket:
         with open(filename, 'wb') as f:
             f.write(content)
             f.close()
+
+    def post_request(self, url,userName,password):
+        url = urlparse(url)
+        host = url.hostname
+        port = url.port
+        phose = 'proxy_host'
+        if port is None:
+            port = 80
+
+
+
+        addr = socket.getaddrinfo(host, 80)[0][-1]
+        self.sock.connect(addr)
+        return (host, path)
+        if(user_agent):
+            user_pass = base64.encodingstring(userName+":"+password)
+            proxy_authorization = 'Proxy-authorization: Basic '+user_pass+'\r\n'
+            post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nProxy-authorization: Basic %s:%s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0],userName,password,user_agent)
+            sent = self.sock.sendall(bytes(post_msg, 'utf8'))
 
     def get_post(self, url):
         tmp=self.connect(url)
@@ -104,7 +130,7 @@ class OneSocket:
 
         content = all_content.split('\r\n\r\n')[1]
         content = content.encode()
-        with open("body_post.txt", 'wb') as f:
+        with open("login.txt", 'wb') as f:
             f.write(content)
             f.close()
 
@@ -211,25 +237,56 @@ class Crawler:
 
     ############################################## Http--Get #########################
     def http_get(self, url, filename):
-        print("Get")
         global user_agent
         if user_agent:
             self.sock=OneSocket()
-            self.sock.get_response(url, filename)
+            self.sock.get_request(url, filename)
 
     ############################################## Http--Post #########################
-    def http_post(self,url):
+    def http_post(self,url,userName, password):
         print("Post")
         global user_agent
         if user_agent:
             self.sock=OneSocket()
-            self.sock.get_post(url)
+            self.sock.post_request(url,userName,password)
 
 
     ############################################## Links List #########################
     def dfs(self, links_list):
-        print("DFS")
+        print("here")
+        # count_page = 0
+        # for ele in links_list:
 
+        #             page_opened=1
+        # for current_depth in range(1,own_config['depth']-1):
+        #     if current_depth in links_depth:
+        #         for each_link in links_depth[current_depth]:
+        #             crawler.http_get(each_link, 'home.html')
+
+        #             #check deadend
+        #             header = open("header.txt", encoding='utf8')
+        #             firstline=header.readline().rstrip()
+        #             error=0
+        #             for codes in error_codes: 
+        #                 error_message="HTTP/1.1 "+codes
+        #                 if firstline==error_message:
+        #                     error=1
+        #             if error==1:
+        #                 continue        
+
+        #             page_opened+=1
+        #             web = open("home.html", encoding='utf8')
+        #             soup = BeautifulSoup(web, "html.parser")
+                    
+        #             find_words(soup,words)
+        #             find_links(soup,links_depth,current_depth+1) 
+
+        #             if page_opened==own_config['page']:
+        #                 break
+        #         if page_opened==own_config['page']:
+        #             break   
+        #     else:
+        #         break      
 
 
 
@@ -249,6 +306,7 @@ def find_words(soup,words):
         tmp=visible_texts[n].split()
         for i in range(len(tmp)):
             words.append(tmp[i])
+    return words
 
 #finding and putting all the links found on the website into the list links_depth[] at a specific level
 def find_links(soup,links_depth,depth,logins,crawler):
@@ -316,6 +374,8 @@ def output_files(words,links_depth,logins):
     l.close()
     log.close()
 
+########################################### Main function#######################
+
 def main():
     global user_agent
     global final_words
@@ -328,24 +388,27 @@ def main():
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
     user_agent = own_config['user_agent']
+
+    #crawler.http_post("https://3.16.240.57/wp-login.php","usersdds","EN9fQcC3jnsS")
+     
     crawler.http_get(starting_page, 'home.html')
 
     #check deadend of the very first page
     header = open("header.txt", encoding='utf8')
     firstline=header.readline().rstrip()
-    for codes in error_codes: 
-        error_message="HTTP/1.1 "+codes
-        if firstline==error_message:
-            print("Cannot open this page!")
-            exit(1)        
+    code = firstline.split(" ")[1]
 
-    #2 lists
+    if error in error_codes:
+        print("No available website can be crawled")
+        exit(0)  
+
+    ########################### Get words_list.txt && links.txt######################
     words=[]
     logins=[]
 
     web = open("home.html", encoding='utf8')
     soup = BeautifulSoup(web, "html.parser")
-    links_depth[0]= [starting_page]
+    links_depth[0]= [starting_page] ### start node of the tree
 
     if login_page(starting_page,crawler)==True:
         logins.append(starting_page)

@@ -7509,6 +7509,7 @@ for
 your
 interest
 in
+<<<<<<< HEAD
 Google
 AdSense.
 Unfortunately,
@@ -7518,6 +7519,53 @@ your
 application,
 we're
 unable
+=======
+<<<<<<< HEAD
+hot
+water.”
+by
+Eleanor
+Roosevelt
+(about)
+Tags:
+misattributed-eleanor-roosevelt
+“A
+day
+without
+sunshine
+is
+like,
+you
+know,
+night.”
+by
+Steve
+Martin
+(about)
+Tags:
+humor
+obvious
+simile
+Next
+→
+Top
+Ten
+tags
+love
+inspirational
+life
+humor
+books
+reading
+friendship
+friends
+truth
+simile
+=======
+turn
+be
+referred
+>>>>>>> c71372d57c0920054458c069585c901af68845f5
 to
 accept
 you
@@ -8555,6 +8603,7 @@ hand.
 Google
 Chrome
 is
+<<<<<<< HEAD
 required
 to
 run
@@ -8716,3 +8765,8 @@ Privacy
 Terms
 Help
 Center
+=======
+not
+allowed!!!
+>>>>>>> 07d723cc5ea148d9e70295338b23ebfa55eead83
+>>>>>>> c71372d57c0920054458c069585c901af68845f5
