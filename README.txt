@@ -7,6 +7,7 @@ Cheryl
 
 login_url = "https://3.16.240.57/wp-login.php"
 starting_page = "http://songyy.pythonanywhere.com/quotes"
+    #crawler.http_post("https://3.16.240.57/wp-login.php","usersdds","EN9fQcC3jnsS")
 
 
 3. Limit:

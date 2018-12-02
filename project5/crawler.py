@@ -21,7 +21,7 @@ words_list = None
 ########### Get all words by applying for upper,lower, reverse and leet-speak conversion
 final_words =None
 ############## Login URL ##############
-login_url = None
+login_url = []
 
 ###################### Personal Socket ###################
 class OneSocket:
@@ -109,11 +109,9 @@ class OneSocket:
 ##############################################################
 #                Create 'wordsList'
 ###############################################################
-
 def capitalization_permutations(s):
     """Generates the different ways of capitalizing the letters in
     the string s."""
-
     # >>> list(capitalization_permutations('abc'))
     # ['ABC', 'aBC', 'AbC', 'abC', 'ABc', 'aBc', 'Abc', 'abc']
     # >>> list(capitalization_permutations(''))
@@ -185,7 +183,7 @@ def create_dict(words_file):  ## words_file = base_words
     final_words.close()
 
 ##############################################
-#  Cawler  Class  and basic function
+#  Basic functions
 ###############################################
 
 def tag_visible(element):
@@ -194,7 +192,6 @@ def tag_visible(element):
     if isinstance(element, Comment):
         return False
     return True
-
 
 #finding and putting all the words found on the website into the list words[] 
 def find_words(soup,words):
@@ -207,32 +204,17 @@ def find_words(soup,words):
     return words
 
 #finding and putting all the links found on the website into the list links_depth[] at a specific level
-def find_page_info(url, links_depth, words, index):
-    with open("home.html", encoding='utf8') as web:
-        soup = BeautifulSoup(web, "html.parser")
-        ###### Get words ################
-        allLinks = soup.find_all(text = True)
-        visible_texts = list(filter(tag_visible, texts)) 
-        for n in range(len(visible_texts)):
-            tmp=visible_texts[n].split()
-            for i in range(len(tmp)):
-                words.append(tmp[i])
-
-        ########### Get links
-        allLinks = soup.findAll('a',href=True)
-        for ele in allLinks:
-            absolute_url = urljoin(starting_page,ele['href'])
-        absolute_url = urljoin(starting_page,n['href'])
-        if links_depth[index] is None:
-            links_depth[index] = [url]
-        else:
-            if url not in links_depth[index]:
-                links_depth[index].append(url)
-
-
+def find_links(soup,links_depth,depth,logins,crawler):
+    allLinks = soup.findAll('a',href=True)
     temp_list = []
     for n in allLinks:
-        thehttp=urljoin(starting_page,n['href'])
+        #check domain
+        if (urlparse(n['href']).hostname)==None:
+            thehttp=urljoin(starting_page,n['href'])
+        else:
+            if (urlparse(n['href']).hostname) != (urlparse(starting_page).hostname):
+                continue
+            thehttp=n['href']
         
         #check if the link is already in the dict
         found=0
@@ -250,6 +232,43 @@ def find_page_info(url, links_depth, words, index):
         links_depth[depth].extend(temp_list)
     else:
         links_depth[depth]=temp_list
+
+
+#check if it is a login page
+def login_page(html,crawler):
+    crawler.http_get(html , 'check.html')
+    website = open("check.html", encoding='utf8')
+    soup2 = BeautifulSoup(website, "html.parser")
+    allforms = soup2.findAll('form')
+    for form in allforms:
+        if form.get('name')==None:
+            continue
+        s=form.get('name').encode().decode()
+        if bool(re.search('log[\s_]*in',s ,re.IGNORECASE))==True:
+            return True
+        if bool(re.search('sign[\s_]*in', s,re.IGNORECASE))==True:
+            return True
+    return False        
+
+#writing to output files
+def output_files(words,links_depth,logins):
+    new_words =('\n'.join(words)).encode('utf-8','ignore')
+    w = open("words.txt", "wb")
+    w.write(new_words)
+
+    l = open("links.txt", "wb")
+    for n in range(len(links_depth)):
+        new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
+        l.write(new_links)
+
+    new_logins =('\n'.join(logins)).encode('utf-8','ignore')
+    log = open("logins.txt", "wb")
+    log.write(new_logins)   
+
+    w.close()
+    l.close()
+    log.close()
+
  
 class Crawler:
     def __init__(self):
@@ -296,24 +315,6 @@ class Crawler:
 
         return False
 
-# #writing to output files
-# def output_files(words,links_depth,logins):
-#     new_words =('\n'.join(words)).encode('utf-8','ignore')
-#     w = open("words.txt", "wb")
-#     w.write(new_words)
-
-#     l = open("links.txt", "wb")
-#     for n in range(len(links_depth)):
-#         new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
-#         l.write(new_links)
-
-#     new_logins =('\n'.join(logins)).encode('utf-8','ignore')
-#     log = open("logins.txt", "wb")
-#     log.write(new_logins)   
-
-#     w.close()
-#     l.close()
-
 ################### Main Entry ##############################
 def main():
 	global starting_page
@@ -346,164 +347,19 @@ def main():
     links_depth = {}
 
     starting_page ="https://ec2-3-16-240-57.us-east-2.compute.amazonaws.com"
-
-    ########### Breadth First Search #####################
-    if crawler.choice == 'breadth':
-        index = 0 ######### record the current depth
-        page_count = 0 ############ record the current total number of pages
-        while(True):
-            if (page_count <= crawler.page && index <= crawler.depth):
-                if index == 0:
-                    crawler.http_get(starting_page, 'home.html')
-                    if crawler.isDead():
-                        print("This website does exist, you cannot make the crawling")
-                        exit(0)
-                    else:
-                        links_depth[0] = [starting_page]
-                        find_links(url, links_depth)
-
-    with open("home.html", encoding='utf8') as web:
-        soup = BeautifulSoup(web, "html.parser")
-        links_depth[0] = [starting_page]
-
-                for ele in links_depth[index]:
-                ### home.html is the next page html
-                    crawler.http_get(ele, 'home.html')
-                    page_count += 1
-                    if crawler.isDead():
-                        continue
-                    else:
-                        with open("home.html", encoding='utf8') as web:
-                            soup = BeautifulSoup(web, "html.parser")
-                            if links_depth[index] :
-                                links_depth.append()
-
-    #                 page_opened+=1
-    #                 web = open("home.html", encoding='utf8')
-    #                 soup = BeautifulSoup(web, "html.parser")
-                    
-    #                 find_words(soup,words)
-    #                 find_links(soup,links_depth,current_depth+1) 
-
-    #                 if page_opened==own_config['page']:
-    #                     break
-    #             if page_opened==own_config['page']:
-    #                 break   
-    #         else:
-    #             break      
-
-    # output_files(words,links_depth,login)
-           
-    # crawler.http_get(starting_page, 'home.html')
-
-    #check deadend of the very first page
-    # header = open("header.txt", encoding='utf8')
-    # firstline=header.readline().rstrip()
-    # for codes in error_codes: 
-    #     error_message="HTTP/1.1 "+codes
-    #     if firstline==error_message:
-    #         print("Cann
-
-
-    # ########################### Get words_list.txt && links.txt######################
-    words = []
-    links = []
-
-    web = open("home.html", encoding='utf8')
-    soup = BeautifulSoup(web, "html.parser")
-    links_depth[0]= [starting_page]
-
-    if login_page(starting_page,crawler)==True:
-        logins.append(starting_page)
-    find_words(soup,words)
-    find_links(soup,links_depth,1,logins,crawler) 
-
-    # depth=1 || page=1
-    if own_config['depth']==1 or own_config['page']==1:
-        output_files(words,links_depth,logins)
-        exit(0) 
-
-    #Depth First Search
-    if own_config['choice'] == 'depth':
-        print("HI")
-        
-    # Breadth First Search
-    else:
-        page_opened=1
-        current_depth=1
-
-        while(True):
-            if own_config['depth']!=0 and current_depth==own_config['depth']:
-                break
-            if current_depth in links_depth:
-                for each_link in links_depth[current_depth]:
-                    crawler.http_get(each_link, 'home.html')
-
-                    #check deadend
-                    header = open("header.txt", encoding='utf8')
-                    firstline=header.readline().rstrip()
-                    error=0
-                    for codes in error_codes: 
-                        error_message="HTTP/1.1 "+codes
-                        if firstline==error_message:
-                            error=1
-                    if error==1:
-                        continue        
-
-                    page_opened+=1
-                    web = open("home.html", encoding='utf8')
-                    soup = BeautifulSoup(web, "html.parser")
-                    
-                    find_words(soup,words)
-                    find_links(soup,links_depth,current_depth+1,logins,crawler) 
-
-                    if page_opened==own_config['page']:
-                        break
-                if page_opened==own_config['page']:
-                    break 
-                current_depth+=1      
-            else:
-                break                
-
-    output_files(words,links_depth,logins)
-
-main()
-
-def main():
-    global user_agent
-    global final_words
-    global starting_page
-
-    crawler = Crawler()
-    own_config = dict()
-    own_config['user_agent']= sys.args.user  # one user_agent
-    own_config['choice'] = sys.args.choice  # breadth or depth
-    own_config['depth']= sys.args.depth  #  depth of pages to crawling
-    own_config['page'] = sys.args.page  # number of pages to crawled pages
-    user_agent = own_config['user_agent']
-
-    #crawler.http_post("https://3.16.240.57/wp-login.php","usersdds","EN9fQcC3jnsS")
      
     crawler.http_get(starting_page, 'home.html')
-
-    #check deadend of the very first page
-    header = open("header.txt", encoding='utf8')
-    firstline=header.readline().rstrip()
-    code = firstline.split(" ")[1]
-    if code in error_codes:
+    if crawler.isDead():
         print("No available website can be crawled")
         exit(0)  
 
     ########################### Get words_list.txt && links.txt######################
-    words=[]
-    logins=[]
-
-    web = open("home.html", encoding='utf8')
-    soup = BeautifulSoup(web, "html.parser")
-    links_depth[0]= [starting_page] ### start node of the tree
+    with open ("home.html", encoding='utf8') as web:
+        soup = BeautifulSoup(web, "html.parser")
+        links_depth[0]= [starting_page] ### start node of the tree
 
     if login_page(starting_page,crawler)==True:
-        logins.append(starting_page)
+        login_url.append(starting_page)
     find_words(soup,words)
     find_links(soup,links_depth,1,logins,crawler) 
 

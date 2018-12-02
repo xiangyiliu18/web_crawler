@@ -8,13 +8,13 @@ headers ={
 }
 login_data ={
 	'log':'user',
-	'pwd':"EN9fQcC3jnsS",
+	'pwd':"password",
 	# 'wp-submit': 'Log In'
 }
 
 with requests.Session() as s:
 	# url = "https://3.16.240.57/wp-login.php"
-	url="http://3.16.240.57/wp-login.php"
+	url="http://songyy.pythonanywhere.com/login"
 	r = s.post(url, data = login_data, headers=headers, verify=False)
 	with(open('f1.html', "wb+")) as f:
 		print(r.status_code)
