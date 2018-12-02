@@ -124,7 +124,6 @@ def main():
     crawler = Crawler()
     own_config = dict()
     own_config['user_agent']= sys.args.user  # one user_agent
-<<<<<<< HEAD
     own_config['choice'] = sys.args.choice  # breadth or depth
     own_config['depth']= sys.args.depth  #  depth of pages to crawling
     own_config['page'] = sys.args.page  # number of pages to crawled pages
@@ -134,11 +133,9 @@ def main():
     crawler.http_get("http://www.google.com", "home_1.html")
 
 
-=======
     own_config['choice'] = sys.args.choice   # breadth or depth
     own_config['depth']= sys.args.depth      # depth of pages to crawling
     own_config['page'] = sys.args.page       # number of pages to crawled pages
->>>>>>> c811d63d23a6e1bf5b95483052557f037961ec18
 
 
 main()
