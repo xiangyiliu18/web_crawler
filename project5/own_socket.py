@@ -148,6 +148,14 @@ def capitalization_permutations(s):
     # ['']
     # >>> list(capitalization_permutations('X*Y'))
     # ['X*Y', 'x*Y', 'X*y', 'x*y']
+    if s == '':
+        yield ''
+        return
+    for rest in capitalization_permutations(s[1:]):
+        yield s[0].upper() + rest
+        if s[0].upper() != s[0].lower():
+            yield s[0].lower() + rest
+            
 
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
@@ -192,13 +200,7 @@ def output_files(words,links_depth,login):
 
     w.close()
     l.close()
-    if s == '':
-        yield ''
-        return
-    for rest in capitalization_permutations(s[1:]):
-        yield s[0].upper() + rest
-        if s[0].upper() != s[0].lower():
-            yield s[0].lower() + rest
+
 
 
 
