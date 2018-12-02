@@ -251,44 +251,6 @@ class Crawler:
     #         self.sock.post_request(url,userName,password)
 
 
-    ############################################## Links List #########################
-    def dfs(self, links_list):
-        print("here")
-        # count_page = 0
-        # for ele in links_list:
-
-        #             page_opened=1
-        # for current_depth in range(1,own_config['depth']-1):
-        #     if current_depth in links_depth:
-        #         for each_link in links_depth[current_depth]:
-        #             crawler.http_get(each_link, 'home.html')
-
-        #             #check deadend
-        #             header = open("header.txt", encoding='utf8')
-        #             firstline=header.readline().rstrip()
-        #             error=0
-        #             for codes in error_codes: 
-        #                 error_message="HTTP/1.1 "+codes
-        #                 if firstline==error_message:
-        #                     error=1
-        #             if error==1:
-        #                 continue        
-
-        #             page_opened+=1
-        #             web = open("home.html", encoding='utf8')
-        #             soup = BeautifulSoup(web, "html.parser")
-                    
-        #             find_words(soup,words)
-        #             find_links(soup,links_depth,current_depth+1) 
-
-        #             if page_opened==own_config['page']:
-        #                 break
-        #         if page_opened==own_config['page']:
-        #             break   
-        #     else:
-        #         break      
-
-
 ##############################################################################################
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:

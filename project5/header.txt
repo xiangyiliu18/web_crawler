@@ -1,7 +1,0 @@
-HTTP/1.1 404 Not Found
-Server: openresty/1.9.15.1
-Date: Sun, 02 Dec 2018 20:43:30 GMT
-Content-Type: text/html
-Content-Length: 2921
-Connection: close
-ETag: "5c018a58-b69"

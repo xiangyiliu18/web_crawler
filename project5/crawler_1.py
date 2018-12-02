@@ -4,11 +4,12 @@ import webbrowser
 
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
 headers ={
-	'user_agent': user_agent
+	'Userr_Agent': user_agent
 }
 login_data ={
-	'log':'user',
-	'pwd':"password",
+	'email':'alex@demo.com',
+	'password':"password",
+	#'csrf_token':"IjViNDI2MDhjMGM3Y2IwYmRkNTFmNTQ2MjliZDI3NzBjNzkzOGY3NDQi.XARP5Q.Hh7Hs1fCKFLRobNpnAWMVgv77oA"
 	# 'wp-submit': 'Log In'
 }
 
