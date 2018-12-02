@@ -2,6 +2,8 @@ import socket
 import sys
 import argparse
 from urllib.parse import urlparse
+from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from urllib.parse import urljoin
@@ -15,8 +17,9 @@ import re
 
 
 links_depth={} #For BFS/DFS
+sd_links_depth={} #For other subdomains
 
-starting_page="http://www.google.com"
+starting_page="http://songyy.pythonanywhere.com/quotes"
 
 words_file = None
 user_agent = None
@@ -330,6 +333,36 @@ def find_links(soup,links_depth,depth,logins,crawler):
         links_depth[depth].extend(temp_list)
     else:
         links_depth[depth]=temp_list
+
+#finding and putting all the links found on the website into the list sd_links_depth[] at a specific level
+def find_sdlinks(soup,sd_links_depth,depth,logins,crawler):
+    allLinks = soup.findAll('a',href=True)
+    temp_list = []
+    for n in allLinks:
+        #check domain
+        if (urlparse(n['href']).hostname)==None:
+            thehttp=urljoin(starting_page,n['href'])
+        else:
+            if (urlparse(n['href']).hostname) != (urlparse(starting_page).hostname):
+                continue
+            thehttp=n['href']
+        
+        #check if the link is already in the dict
+        found=0
+        for n in range(len(sd_links_depth)):
+            if thehttp in sd_links_depth[n]:
+                found=1
+        if thehttp in temp_list:
+            found=1
+        if found==0:
+            if login_page(thehttp,crawler)==True:
+                logins.append(thehttp)        
+            temp_list.append(thehttp)
+
+    if depth in sd_links_depth:
+        sd_links_depth[depth].extend(temp_list)
+    else:
+        sd_links_depth[depth]=temp_list        
  
 #check if it is a login page
 def login_page(html,crawler):
@@ -346,10 +379,24 @@ def login_page(html,crawler):
             return True
         if bool(re.search('sign[\s_]*in', s,re.IGNORECASE))==True:
             return True
-    return False        
+    return False   
+
+#change subdomain
+def replace_subdomain(url,subdomain):
+    
+    old_host=urlparse(url).hostname.split('.')
+    old_host[0]=subdomain
+    new_host=('.').join(old_host)
+
+    o = list(urlsplit(url))
+    o[1] = new_host
+    new_url = urlunsplit(o)
+
+    return new_url
+
 
 #writing to output files
-def output_files(words,links_depth,logins):
+def output_files(words,links_depth,sd_links_depth,logins):
     new_words =('\n'.join(words)).encode('utf-8','ignore')
     w = open("words.txt", "wb")
     w.write(new_words)
@@ -358,6 +405,9 @@ def output_files(words,links_depth,logins):
     for n in range(len(links_depth)):
         new_links =('\n'.join(links_depth[n])).encode('utf-8','ignore')
         l.write(new_links)
+    for y in range(len(sd_links_depth)):
+        new_links =('\n'.join(sd_links_depth[y])).encode('utf-8','ignore')
+        l.write(new_links)    
 
     new_logins =('\n'.join(logins)).encode('utf-8','ignore')
     log = open("logins.txt", "wb")
@@ -423,7 +473,7 @@ def main():
 
         while(True):
             if own_config['depth']!=0 and current_depth==own_config['depth']:
-                break
+                break  
             if current_depth in links_depth:
                 for each_link in links_depth[current_depth]:
                     crawler.http_get(each_link, 'home.html')
@@ -454,18 +504,84 @@ def main():
             else:
                 break 
 
-    # We should crawl more pages!
-    # Using Subdomains
-    if(own_config['page']==0 or page_opened<own_config['page'])
-    {
+   # We should crawl more pages!
+   # Using Subdomains
+    if(own_config['page']==0 or page_opened<own_config['page']):
         subdomains=[]
         sd = open("subdomains.txt", encoding='utf8')
+        host=urlparse(starting_page).hostname.split('.')
         for line in sd:
-            subdomains.append(line.rstrip())
+            if host[0]==line.rstrip():
+                continue
+            subdomains.append(line.rstrip()) 
+        sd.close()
 
-        str="https://wordpress.org/"    
+    #Doing BFS
+    index=0
+    while(own_config['page']==0 or page_opened<own_config['page'] or index<len(subdomains)):
+        
+        crawler.http_get(replace_subdomain(starting_page,subdomains[index]), 'sd.html')
+        print("Tried "+replace_subdomain(starting_page,subdomains[index]))
 
-    }                          
+        #check deadend of the very first page
+        header = open("header.txt", encoding='utf8')
+        firstline=header.readline().rstrip()
+        code = firstline.split(" ")[1]
+        if code in error_codes:
+            index+=1
+            print("No available website can be crawled")
+            continue 
 
-    output_files(words,links_depth,logins)
+        page_opened+=1
+        index+=1
+        web = open("sd.html", encoding='utf8')
+        soup = BeautifulSoup(web, "html.parser")
+
+        #replace the old starting url 
+        starting_page=replace_subdomain(starting_page,subdomains[index])
+        ### start node of a new tree
+        sd_links_depth[0]= [starting_page] 
+
+        #exactly the same as what we did above
+        if login_page(starting_page,crawler)==True:
+            logins.append(starting_page)
+        find_words(soup,words)
+        find_sdlinks(soup,sd_links_depth,1,logins,crawler) 
+
+        current_depth=1
+
+        while(True):
+            if own_config['depth']!=0 and current_depth==own_config['depth']:
+                break  
+            if current_depth in sd_links_depth:
+                for each_link in sd_links_depth[current_depth]:
+                    crawler.http_get(each_link, 'home.html')
+
+                    #check deadend
+                    header = open("header.txt", encoding='utf8')
+                    firstline=header.readline().rstrip()
+                    error=0
+                    for codes in error_codes: 
+                        error_message="HTTP/1.1 "+codes
+                        if firstline==error_message:
+                            error=1
+                    if error==1:
+                        continue        
+
+                    page_opened+=1
+                    web = open("home.html", encoding='utf8')
+                    soup = BeautifulSoup(web, "html.parser")
+                    
+                    find_words(soup,words)
+                    find_sdlinks(soup,sd_links_depth,current_depth+1,logins,crawler) 
+
+                    if page_opened==own_config['page']:
+                        break
+                if page_opened==own_config['page']:
+                    break 
+                current_depth+=1      
+            else:
+                break           
+
+    output_files(words,links_depth,sd_links_depth,logins)
 main()
