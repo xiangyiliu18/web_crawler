@@ -1,35 +1,3 @@
-import socket
-import sys
-import argparse
-from urllib.parse import urlparse
-from bs4 import BeautifulSoup
-from bs4.element import Comment
-from urllib.parse import urljoin
-import base64
-#import httplib
-
-
-error_codes={'400':'BAD REQUEST', '401': 'UNAUTHORIZED', '403': 'FORBIDDEN','404': 'NOT FOUND','410':' GONE','500': 'INTERNAL SERVER ERROR','501': 'NOT IMPLEMENTED','503':'SERVICE UNAVAILABLE','550':'PERMISSION DENIED'}
-
-import re
-
-
-links_depth={} #For BFS/DFS
-
-starting_page="http://www.google.com"
-
-words_file = None
-user_agent = None
-
-final_words= open("words_list.txt", "w+", encoding='utf-8')
-'''
-s = socket.socket()
-s.settimeout(5)   # 5 seconds
-try:
-    s.connect(('123.123.123.123', 12345))         # "random" IP address and port
-except socket.error, exc:
-    print "Caught exception socket.error : %s" % exc
-'''
 class OneSocket:
     global user_agent
     def __init__(self):
@@ -220,6 +188,7 @@ class Crawler:
 
         parser = argparse.ArgumentParser()
         parser.add_argument('-u', '--user', nargs='?', type=str, metavar='user_agent', help='must be provide a custom user-agent for use', required=True)
+        #parser.add_argument('url', type=str, help="website's url", required=True)
         parser.add_argument('-c', '--choice', nargs='?', type=str, choices=['depth','breadth'], default='breadth', help="Depth-first/Breadth-first choice of crawling", required=False)
         parser.add_argument('-d', '--depth', nargs='?', type=int, metavar='num', default=0, help="Maximum depth of pages to crawl", required=False)
         parser.add_argument('-p','--page', nargs='?', type=int, metavar='num', default=0, help='Maximum total number of crawled pages', required= False)
@@ -282,7 +251,6 @@ class Crawler:
         #         break      
 
 
-
 ##############################################################################################
 def tag_visible(element):
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
@@ -290,6 +258,7 @@ def tag_visible(element):
     if isinstance(element, Comment):
         return False
     return True
+
 
 #finding and putting all the words found on the website into the list words[] 
 def find_words(soup,words):
