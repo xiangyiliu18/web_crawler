@@ -4,8 +4,7 @@ Cheryl
 
 
 2. Info
-"http://songyy.pythonanywhere.com/quotes"
-"http://blog.groupof4.com"
+"http://songyy.pythonanywhere.com"
 
 
 3. Limit:
