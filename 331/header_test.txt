@@ -1,0 +1,7 @@
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.12.1
+Date: Tue, 11 Dec 2018 14:53:46 GMT
+Content-Type: text/html
+Content-Length: 185
+Connection: close
+Location: https://scrapinghub.com/robots.txt

@@ -1,0 +1,12 @@
+python crawler.py -u Mozilla/5.0  http://3.16.240.57 -d 3
+
+s = MySocket()
+s.get_response("http://3.16.240.57", "content.html")
+
+tmp[i]= re.sub(r'[^a-zA-Z0-9!#$%&*+-<=>?@^_~]', '', tmp[i])
+
+ec2-3-16-240-57.us-east-2.compute.amazonaws.com
+
+
+user
+EN9fQcC3jnsS
